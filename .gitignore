@@ -1,0 +1,66 @@
+# Ignore build and output directories
+[Bb]in/
+[Oo]bj/
+
+# Ignore user-specific files
+*.user
+*.suo
+*.userprefs
+
+# Ignore Visual Studio temporary files
+*.vs/
+*.vscode/
+
+# Ignore NuGet packages and restore files
+[Nn]u[Gg]et/
+*.nupkg
+packages/
+
+# Ignore local development files
+*.swp
+*.swo
+
+# Ignore ReSharper files
+_ReSharper.*
+*.resharper
+
+# Ignore Rider files
+.idea/
+
+# Ignore test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Ignore logs and diagnostics
+*.log
+*.log.*
+*.pidb
+*.ilk
+*.pdb
+*.db
+
+# Ignore compiled files
+*.dll
+*.exe
+*.cache
+*.dotCover
+
+# Ignore local settings
+local.settings.json
+
+# Ignore Azure Functions
+func/
+
+# Ignore macOS files
+.DS_Store
+
+# Ignore Rider/IntelliJ files
+.idea/
+*.iml
+
+# Ignore Visual Studio Code files
+.vscode/
+
+# Ignore .NET Core specific files
+.project
+.jsproj
