@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PersonalFinanceManager.Models
+namespace FinanceManager.Models
 {
     public class Account
     {

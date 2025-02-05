@@ -5,7 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using PersonalFinanceManager.Models;
+using FinanceManager.Models;
+using System.IO;
+using System.Configuration;
 
 namespace FinanceManager.Data
 {
