@@ -13,12 +13,12 @@
                 </StackPanel>
             </Border>
 
-            <Button Content="Add Transaction" Click="AddTransactionButton_Click"/>
+            <Button Content="Add Transaction" Click="AddTransactionButton_Click" Width="200"/>
 
             <!-- Recent Transactions Section -->
             <TextBlock FontSize="16" FontWeight="Bold" Margin="0,10,0,5" Text="Recent Transactions" />
             <DataGrid ItemsSource="{Binding RecentTransactions}" AutoGenerateColumns="False" 
-                      Height="200" Width="500">
+                      Height="200" Width="500" CanUserAddRows="False" AlternatingRowBackground="LightBlue" AlternationCount="2">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat=d}" Width="100"/>
                     <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="150"/>

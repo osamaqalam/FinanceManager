@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using FinanceManager.Data;
@@ -12,12 +13,14 @@ namespace FinanceManager
     {
         private readonly FinanceContext _context;
         public decimal TotalBalance { get; set; }
-        public List<TransactionViewModel> RecentTransactions { get; set; }
+        // public List<TransactionViewModel> RecentTransactions { get; set; }
+        public ObservableCollection<TransactionViewModel> RecentTransactions { get; set; }
 
         public MainWindow(FinanceContext context)
         {
             InitializeComponent();
             _context = context;
+            RecentTransactions = new ObservableCollection<TransactionViewModel>();
             Loaded += MainWindow_Loaded;
         }
 
@@ -32,23 +35,28 @@ namespace FinanceManager
             // Calculate total balance
             TotalBalance = 0;
 
-            // Bind recent transactions to the DataGrid
-            RecentTransactions = recentTransactions.Select(t => new TransactionViewModel
+            // Clear the existing collection
+            RecentTransactions.Clear();
+
+            // Add the fetched transactions to the ObservableCollection
+            foreach (var transaction in recentTransactions)
             {
-                Date = t.Date,
-                Description = t.Description,
-                Amount = t.Amount,
-            }).ToList();
+                RecentTransactions.Add(new TransactionViewModel
+                {
+                    Date = transaction.Date,
+                    Description = transaction.Description,
+                    Amount = transaction.Amount,
+                });
+            }
 
             DataContext = this;
         }
 
         private void AddTransactionButton_Click(object sender, RoutedEventArgs e)
         {
-            var addTransactionWindow = new AddTransactionWindow(_context);
+            var addTransactionWindow = new AddTransactionWindow(_context, RecentTransactions);
             addTransactionWindow.Owner = this; // Set the owner to MainWindow (optional)
             addTransactionWindow.ShowDialog(); // Show the window as a dialog
-        
         }
     }
 

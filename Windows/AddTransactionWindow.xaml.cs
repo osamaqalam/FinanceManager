@@ -3,6 +3,7 @@ using FinanceManager.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,17 +24,19 @@ namespace FinanceManager.Windows
     public partial class AddTransactionWindow : Window
     {
         private readonly FinanceContext _context;
+        private readonly ObservableCollection<TransactionViewModel> _recentTransactions;
 
-        public AddTransactionWindow(FinanceContext context)
+        public AddTransactionWindow(FinanceContext context, ObservableCollection<TransactionViewModel> recentTransactions)
         {
             InitializeComponent();
             _context = context; // Use the injected context
+            _recentTransactions = recentTransactions;
         }
 
-        private void SubmitButton_Click(object sender, RoutedEventArgs e)
+        private async void SubmitButton_Click(object sender, RoutedEventArgs e)
         {
             // Example: Save a new transaction to the database
-            var transaction = new Transaction
+            var newTransaction = new Transaction
             {
                 CategoryId = 1,
                 Description = txtDescription.Text,
@@ -41,10 +44,17 @@ namespace FinanceManager.Windows
                 Date = DateTime.Now
             };
 
-            _context.Transactions.Add(transaction);
-            _context.SaveChanges();
+            _context.Transactions.Add(newTransaction);
+            await _context.SaveChangesAsync();
 
-            MessageBox.Show("Transaction saved!");
+            // Add the new transaction to the ObservableCollection
+            _recentTransactions.Insert(0, new TransactionViewModel
+            {
+                Date = newTransaction.Date,
+                Description = newTransaction.Description,
+                Amount = newTransaction.Amount,
+            });
+
             this.Close(); // Close the window after saving
         }
     }
