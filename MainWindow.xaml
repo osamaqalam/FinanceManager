@@ -13,6 +13,8 @@
                 </StackPanel>
             </Border>
 
+            <Button Content="Add Transaction" Click="AddTransactionButton_Click"/>
+
             <!-- Recent Transactions Section -->
             <TextBlock FontSize="16" FontWeight="Bold" Margin="0,10,0,5" Text="Recent Transactions" />
             <DataGrid ItemsSource="{Binding RecentTransactions}" AutoGenerateColumns="False" 
@@ -21,7 +23,6 @@
                     <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat=d}" Width="100"/>
                     <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="150"/>
                     <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat=C}" Width="100"/>
-                    <DataGridTextColumn Header="Account" Binding="{Binding AccountName}" Width="150"/>
                 </DataGrid.Columns>
             </DataGrid>
         </StackPanel>

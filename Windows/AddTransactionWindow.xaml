@@ -1,0 +1,24 @@
+﻿<Window x:Class="FinanceManager.Windows.AddTransactionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Add Transaction" Height="300" Width="400"
+        WindowStartupLocation="CenterOwner">
+    <!-- Center the window relative to its owner -->
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="300">
+            <!-- Title -->
+            <TextBlock Text="Add New Transaction" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" HorizontalAlignment="Center"/>
+
+            <!-- Description Field -->
+            <Label Content="Description:"/>
+            <TextBox x:Name="txtDescription" Margin="0,0,0,10"/>
+
+            <!-- Amount Field -->
+            <Label Content="Amount:"/>
+            <TextBox x:Name="txtAmount" Margin="0,0,0,10"/>
+
+            <!-- Save Button -->
+            <Button Content="Submit" Click="SubmitButton_Click" Width="100" HorizontalAlignment="Center"/>
+        </StackPanel>
+    </Grid>
+</Window>
