@@ -26,6 +26,8 @@ namespace FinanceManager.Windows
         private readonly FinanceContext _context;
         private readonly ObservableCollection<TransactionViewModel> _recentTransactions;
 
+        public event EventHandler TransactionAdded;
+
         public AddTransactionWindow(FinanceContext context, ObservableCollection<TransactionViewModel> recentTransactions)
         {
             InitializeComponent();
@@ -54,6 +56,9 @@ namespace FinanceManager.Windows
                 Description = newTransaction.Description,
                 Amount = newTransaction.Amount,
             });
+
+            // Raise the TransactionAdded event
+            TransactionAdded?.Invoke(this, EventArgs.Empty);
 
             this.Close(); // Close the window after saving
         }
