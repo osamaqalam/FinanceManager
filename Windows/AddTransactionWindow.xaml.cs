@@ -37,12 +37,18 @@ namespace FinanceManager.Windows
 
         private async void SubmitButton_Click(object sender, RoutedEventArgs e)
         {
+            // Get the selected item from the transaction type ListBox
+            var selectedItem = (transactionType.SelectedItem as ListBoxItem)?.Content.ToString();
+
+            // Determine the sign based on the selected transaction type
+            int sign = selectedItem == "Withdraw" ? -1 : 1;
+
             // Example: Save a new transaction to the database
             var newTransaction = new Transaction
             {
                 CategoryId = 1,
                 Description = txtDescription.Text,
-                Amount = decimal.Parse(txtAmount.Text),
+                Amount = sign * decimal.Parse(txtAmount.Text),
                 Date = DateTime.Now
             };
 
