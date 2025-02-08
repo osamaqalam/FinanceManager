@@ -24,7 +24,7 @@
             <!-- Amount Field -->
             <Label Content="Amount:"/>
             <TextBox x:Name="txtAmount" Margin="0,0,0,10"/>
-
+            
             <!-- Save Button -->
             <Button Content="Submit" Click="SubmitButton_Click" Width="100" HorizontalAlignment="Center"/>
         </StackPanel>

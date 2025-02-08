@@ -15,6 +15,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Text.RegularExpressions;
 
 namespace FinanceManager.Windows
 {
@@ -37,6 +38,13 @@ namespace FinanceManager.Windows
 
         private async void SubmitButton_Click(object sender, RoutedEventArgs e)
         {
+            // Validate the amount input
+            if (!IsTextAllowed(txtAmount.Text))
+            {
+                MessageBox.Show("Please enter a valid amount in format of X.XX", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             // Get the selected item from the transaction type ListBox
             var selectedItem = (transactionType.SelectedItem as ListBoxItem)?.Content.ToString();
 
@@ -68,5 +76,13 @@ namespace FinanceManager.Windows
 
             this.Close(); // Close the window after saving
         }
+
+        private static bool IsTextAllowed(string text)
+        {
+            Regex regex = new Regex(@"^\d*\.?\d*$"); // Regex that matches allowed text (digits and a single optional decimal point)
+            return regex.IsMatch(text);
+        }
+
+        
     }
 }
