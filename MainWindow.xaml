@@ -1,9 +1,10 @@
 ﻿<Window x:Class="FinanceManager.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         Title="Dashboard" Height="450" Width="800">
     <Grid Margin="10">
-        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
             <!-- Total Balance Section -->
             <Border BorderBrush="Black" BorderThickness="1" Padding="10" Margin="0,0,0,10">
                 <StackPanel>
@@ -15,16 +16,32 @@
 
             <Button Content="Add Transaction" Click="AddTransactionButton_Click" Width="200"/>
 
+
+            <!-- Line Chart Section -->
+            <TextBlock FontSize="16" FontWeight="Bold" Margin="0,10,0,5" Text="Amount vs Date" />
+            <lvc:CartesianChart Height="150" Width="400" Series="{Binding SeriesCollection}">
+                <lvc:CartesianChart.AxisX>
+                    <lvc:Axis Title="Date" Labels="{Binding Labels}"></lvc:Axis>
+                </lvc:CartesianChart.AxisX>
+                <lvc:CartesianChart.AxisY>
+                    <lvc:Axis Title="Amount" MinValue="-200" MaxValue="200" Separator="{Binding YAxisSeparator}"></lvc:Axis>
+                </lvc:CartesianChart.AxisY>
+            </lvc:CartesianChart>
+        </StackPanel>
+        
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Right">
+
             <!-- Recent Transactions Section -->
             <TextBlock FontSize="16" FontWeight="Bold" Margin="0,10,0,5" Text="Recent Transactions" />
             <DataGrid ItemsSource="{Binding RecentTransactions}" AutoGenerateColumns="False" 
-                      Height="200" Width="500" CanUserAddRows="False" AlternatingRowBackground="LightBlue" AlternationCount="2">
+                      Height="350" Width="350" CanUserAddRows="False" AlternatingRowBackground="LightBlue" AlternationCount="2">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat=d}" Width="100"/>
                     <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="150"/>
-                    <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat=C}" Width="100"/>
+                    <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat=C}" Width="90"/>
                 </DataGrid.Columns>
             </DataGrid>
         </StackPanel>
+
     </Grid>
 </Window>

@@ -6,6 +6,8 @@ using System.Windows;
 using FinanceManager.Data;
 using FinanceManager.Models;
 using FinanceManager.Windows;
+using LiveCharts;
+using LiveCharts.Wpf;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinanceManager
@@ -15,6 +17,9 @@ namespace FinanceManager
         private readonly FinanceContext _context;
         private decimal _totalBalance;
         public ObservableCollection<TransactionViewModel> RecentTransactions { get; set; }
+        public SeriesCollection SeriesCollection { get; set; }
+        public List<string> Labels { get; set; }
+        public Separator YAxisSeparator { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
 
         public decimal TotalBalance
@@ -35,6 +40,13 @@ namespace FinanceManager
             InitializeComponent();
             _context = context;
             RecentTransactions = new ObservableCollection<TransactionViewModel>();
+            SeriesCollection = new SeriesCollection();
+            Labels = new List<string>();
+            YAxisSeparator = new Separator
+            {
+                Step = 100 // Set the interval for the y-axis
+            };
+            DataContext = this; // Set DataContext after initializing properties
             Loaded += MainWindow_Loaded;
         }
 
@@ -76,6 +88,21 @@ namespace FinanceManager
                         Amount = transaction.Amount,
                     });
                 }
+
+                // Prepare data for the chart
+                var transactions = await _context.Transactions
+                    .OrderBy(t => t.Date)
+                    .ToListAsync();
+
+                var amounts = transactions.Select(t => t.Amount).ToArray();
+                Labels = transactions.Select(t => t.Date.ToShortDateString()).ToList();
+
+                SeriesCollection.Clear();
+                SeriesCollection.Add(new LineSeries
+                {
+                    Title = "Amount",
+                    Values = new ChartValues<decimal>(amounts)
+                });
 
                 DataContext = this;
             }
