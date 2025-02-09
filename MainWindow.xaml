@@ -8,9 +8,9 @@
             <!-- Total Balance Section -->
             <Border BorderBrush="Black" BorderThickness="1" Padding="10" Margin="0,0,0,10">
                 <StackPanel>
-                    <TextBlock FontSize="16" FontWeight="Bold" Text="Total Balance" />
+                    <TextBlock FontSize="16" FontWeight="Bold" Text="Month Balance" />
                     <TextBlock FontSize="20" FontWeight="Bold" Foreground="Green" 
-                               Text="{Binding TotalBalance, StringFormat=C}" />
+                               Text="{Binding MonthlyBalance, StringFormat=C}" />
                 </StackPanel>
             </Border>
 
@@ -39,6 +39,7 @@
                     <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat=d}" Width="100"/>
                     <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="150"/>
                     <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat=C}" Width="90"/>
+                    <DataGridTextColumn Header="MBalance" Binding="{Binding MBalance, StringFormat=C}" Width="90"/>
                 </DataGrid.Columns>
             </DataGrid>
         </StackPanel>

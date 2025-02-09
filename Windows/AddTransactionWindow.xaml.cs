@@ -51,12 +51,27 @@ namespace FinanceManager.Windows
             // Determine the sign based on the selected transaction type
             int sign = selectedItem == "Withdraw" ? -1 : 1;
 
+            decimal amount = sign * decimal.Parse(txtAmount.Text);
+
+            // Calculate total balance for the current month
+            // Get the current date
+            var now = DateTime.Now;
+            var startOfMonth = new DateTime(now.Year, now.Month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+            decimal mBalance = await _context.Transactions
+                .Where(t => t.Date >= startOfMonth && t.Date <= endOfMonth)
+                .SumAsync(t => t.Amount);
+
+            mBalance += amount;
+
             // Example: Save a new transaction to the database
             var newTransaction = new Transaction
             {
                 CategoryId = 1,
                 Description = txtDescription.Text,
-                Amount = sign * decimal.Parse(txtAmount.Text),
+                Amount = amount,
+                MBalance = mBalance,
                 Date = DateTime.Now
             };
 
@@ -69,6 +84,7 @@ namespace FinanceManager.Windows
                 Date = newTransaction.Date,
                 Description = newTransaction.Description,
                 Amount = newTransaction.Amount,
+                MBalance = newTransaction.MBalance
             });
 
             // Raise the TransactionAdded event

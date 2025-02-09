@@ -15,22 +15,22 @@ namespace FinanceManager
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         private readonly FinanceContext _context;
-        private decimal _totalBalance;
+        private decimal _monthlyBalance;
         public ObservableCollection<TransactionViewModel> RecentTransactions { get; set; }
         public SeriesCollection SeriesCollection { get; set; }
         public List<string> Labels { get; set; }
         public Separator YAxisSeparator { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public decimal TotalBalance
+        public decimal MonthlyBalance
         {
-            get => _totalBalance;
+            get => _monthlyBalance;
             set
             {
-                if (_totalBalance != value)
+                if (_monthlyBalance != value)
                 {
-                    _totalBalance = value;
-                    OnPropertyChanged(nameof(TotalBalance));
+                    _monthlyBalance = value;
+                    OnPropertyChanged(nameof(MonthlyBalance));
                 }
             }
         }
@@ -71,9 +71,10 @@ namespace FinanceManager
                     .ToListAsync();
 
                 // Calculate total balance for the current month
-                TotalBalance = await _context.Transactions
-                    .Where(t => t.Date >= startOfMonth && t.Date <= endOfMonth)
-                    .SumAsync(t => t.Amount);
+                MonthlyBalance = await _context.Transactions
+                    .OrderByDescending(t => t.Date)
+                    .Select(t => t.MBalance)
+                    .FirstOrDefaultAsync();
 
                 // Clear the existing collection
                 RecentTransactions.Clear();
@@ -86,6 +87,7 @@ namespace FinanceManager
                         Date = transaction.Date,
                         Description = transaction.Description,
                         Amount = transaction.Amount,
+                        MBalance = transaction.MBalance
                     });
                 }
 
@@ -135,6 +137,7 @@ namespace FinanceManager
     {
         public string Description { get; set; }
         public decimal Amount { get; set; }
+        public decimal MBalance { get; set; }
         public System.DateTime Date { get; set; }
     }
 }
