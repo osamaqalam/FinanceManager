@@ -7,6 +7,7 @@ using FinanceManager.Data;
 using FinanceManager.Models;
 using FinanceManager.Windows;
 using LiveCharts;
+using LiveCharts.Helpers;
 using LiveCharts.Wpf;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,9 +17,12 @@ namespace FinanceManager
     {
         private readonly FinanceContext _context;
         private decimal _monthlyBalance;
+        private int _xMin = -1;
+        private int _xMax = 1;
+        private PeriodUnits _period = PeriodUnits.Days;
+        private DateTime _initialDateTime;
         public ObservableCollection<TransactionViewModel> RecentTransactions { get; set; }
         public SeriesCollection SeriesCollection { get; set; }
-        public List<string> Labels { get; set; }
         public Separator YAxisSeparator { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -35,17 +39,57 @@ namespace FinanceManager
             }
         }
 
+        public int XMin
+        {
+            get { return _xMin; }
+            set
+            {
+                _xMin = value;
+                OnPropertyChanged("XMin");
+            }
+        }
+
+        public int XMax
+        {
+            get { return _xMax; }
+            set
+            {
+                _xMax = value;
+                OnPropertyChanged("XMax");
+            }
+        }
+
+        public PeriodUnits Period
+        {
+            get { return _period; }
+            set
+            {
+                _period = value;
+                OnPropertyChanged("Period");
+            }
+        }
+
+        public DateTime InitialDateTime
+        {
+            get { return _initialDateTime; }
+            set
+            {
+                _initialDateTime = value;
+                OnPropertyChanged("InitialDateTime");
+            }
+        }
         public MainWindow(FinanceContext context)
         {
             InitializeComponent();
             _context = context;
             RecentTransactions = new ObservableCollection<TransactionViewModel>();
             SeriesCollection = new SeriesCollection();
-            Labels = new List<string>();
             YAxisSeparator = new Separator
             {
                 Step = 100 // Set the interval for the y-axis
             };
+            var now = DateTime.UtcNow;
+            InitialDateTime = new DateTime(now.Year, now.Month, now.Day);
             DataContext = this; // Set DataContext after initializing properties
             Loaded += MainWindow_Loaded;
         }
@@ -93,17 +137,33 @@ namespace FinanceManager
 
                 // Prepare data for the chart
                 var transactions = await _context.Transactions
-                    .OrderBy(t => t.Date)
-                    .ToListAsync();
+                    .OrderByDescending(t => t.Date)
+                    .ToListAsync();                
 
-                var amounts = transactions.Select(t => t.Amount).ToArray();
-                Labels = transactions.Select(t => t.Date.ToShortDateString()).ToList();
+                var mBalances = transactions
+                    .GroupBy(t => t.Date.Date) // Group by date only, ignoring time
+                    .OrderBy(g => g.Key)
+                    .Select(g => g.OrderBy(t => t.Date).First().MBalance)
+                    .ToList();
+
+                if (transactions.Any())
+                {
+                    InitialDateTime = new DateTime(transactions.Last().Date.Year, transactions.Last().Date.Month, transactions.Last().Date.Day);
+                    XMin = (int)(startOfMonth - transactions.Last().Date).TotalDays;
+                    XMax = (int)(endOfMonth - transactions.Last().Date).TotalDays;
+                }
+                else
+                {
+                    InitialDateTime = new DateTime(now.Year, now.Month, now.Day);
+                    XMin = (int)(startOfMonth - now).TotalDays + 5;
+                    XMax = (int)(endOfMonth - now).TotalDays + 5;
+                }
 
                 SeriesCollection.Clear();
                 SeriesCollection.Add(new LineSeries
                 {
                     Title = "Amount",
-                    Values = new ChartValues<decimal>(amounts)
+                    Values = new ChartValues<decimal>(mBalances)
                 });
 
                 DataContext = this;
