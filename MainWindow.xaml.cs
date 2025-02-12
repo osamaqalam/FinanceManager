@@ -19,6 +19,9 @@ namespace FinanceManager
         private decimal _monthlyBalance;
         private int _xMin = -1;
         private int _xMax = 1;
+        private decimal _yMin = -1;
+        private decimal _yMax = 1;
+        private const decimal Y_MARGIN = 1.1M;
         private PeriodUnits _period = PeriodUnits.Days;
         private DateTime _initialDateTime;
         public ObservableCollection<TransactionViewModel> RecentTransactions { get; set; }
@@ -56,6 +59,26 @@ namespace FinanceManager
             {
                 _xMax = value;
                 OnPropertyChanged("XMax");
+            }
+        }
+
+        public decimal YMin
+        {
+            get { return _yMin; }
+            set
+            {
+                _yMin = value;
+                OnPropertyChanged("YMin");
+            }
+        }
+
+        public decimal YMax
+        {
+            get { return _yMax; }
+            set
+            {
+                _yMax = value;
+                OnPropertyChanged("YMax");
             }
         }
 
@@ -162,6 +185,12 @@ namespace FinanceManager
                     .OrderBy(g => g.Key)
                     .Select(g => g.OrderBy(t => t.Date).First().MBalance)
                     .ToList();
+
+            if (mBalances.Any())
+            {
+                YMin = mBalances.Min() * Y_MARGIN;
+                YMax = mBalances.Max() * Y_MARGIN;
+            }
 
             if (transactions.Any())
             {

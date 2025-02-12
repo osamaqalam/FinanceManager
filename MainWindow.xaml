@@ -31,7 +31,7 @@
                     </lvc:DateAxis>
                 </lvc:CartesianChart.AxisX>
                 <lvc:CartesianChart.AxisY>
-                    <lvc:Axis Title="Amount" MinValue="-200" MaxValue="200" Separator="{Binding YAxisSeparator}"></lvc:Axis>
+                    <lvc:Axis Title="Amount" MinValue="{Binding YMin}" MaxValue="{Binding YMax}" Separator="{Binding YAxisSeparator}"></lvc:Axis>
                 </lvc:CartesianChart.AxisY>
             </lvc:CartesianChart>
         </StackPanel>
