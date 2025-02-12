@@ -90,88 +90,105 @@ namespace FinanceManager
             };
             var now = DateTime.UtcNow;
             InitialDateTime = new DateTime(now.Year, now.Month, now.Day);
-            DataContext = this; // Set DataContext after initializing properties
+            DataContext = this;
             Loaded += MainWindow_Loaded;
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            await LoadData();
+            await LoadDataAsync();
         }
 
-        private async Task LoadData()
+        private async Task LoadDataAsync()
         {
             try
             {
-                // Get the current date
-                var now = DateTime.Now;
-                var startOfMonth = new DateTime(now.Year, now.Month, 1);
-                var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+                // Load data in background
+                var data = await Task.Run(() => LoadData());
 
-                // Fetch data from the database
-                var recentTransactions = await _context.Transactions
-                    .OrderByDescending(t => t.Date)
-                    .Take(10) // Show the last 10 transactions
-                    .ToListAsync();
-
-                // Calculate total balance for the current month
-                MonthlyBalance = await _context.Transactions
-                    .OrderByDescending(t => t.Date)
-                    .Select(t => t.MBalance)
-                    .FirstOrDefaultAsync();
-
-                // Clear the existing collection
-                RecentTransactions.Clear();
-
-                // Add the fetched transactions to the ObservableCollection
-                foreach (var transaction in recentTransactions)
-                {
-                    RecentTransactions.Add(new TransactionViewModel
-                    {
-                        Date = transaction.Date,
-                        Description = transaction.Description,
-                        Amount = transaction.Amount,
-                        MBalance = transaction.MBalance
-                    });
-                }
-
-                // Prepare data for the chart
-                var transactions = await _context.Transactions
-                    .OrderByDescending(t => t.Date)
-                    .ToListAsync();                
-
-                var mBalances = transactions
-                    .GroupBy(t => t.Date.Date) // Group by date only, ignoring time
-                    .OrderBy(g => g.Key)
-                    .Select(g => g.OrderBy(t => t.Date).First().MBalance)
-                    .ToList();
-
-                if (transactions.Any())
-                {
-                    InitialDateTime = new DateTime(transactions.Last().Date.Year, transactions.Last().Date.Month, transactions.Last().Date.Day);
-                    XMin = (int)(startOfMonth - transactions.Last().Date).TotalDays;
-                    XMax = (int)(endOfMonth - transactions.Last().Date).TotalDays;
-                }
-                else
-                {
-                    InitialDateTime = new DateTime(now.Year, now.Month, now.Day);
-                    XMin = (int)(startOfMonth - now).TotalDays + 5;
-                    XMax = (int)(endOfMonth - now).TotalDays + 5;
-                }
-
-                SeriesCollection.Clear();
-                SeriesCollection.Add(new LineSeries
-                {
-                    Title = "Amount",
-                    Values = new ChartValues<decimal>(mBalances)
-                });
-
-                DataContext = this;
+                // Update UI with loaded data
+                UpdateUI(data);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error loading data: {ex.Message}");
             }
+        }
+
+        private (List<Transaction> transactions,
+                 decimal monthlyBalance) LoadData()
+        {
+            
+            // Simulate a long-running task
+            System.Threading.Thread.Sleep(10000);
+
+            // Fetch data from the database
+            var transactions = _context.Transactions
+                .OrderByDescending(t => t.Date)
+                .ToList();
+
+            // Calculate total balance for the current month
+            var monthlyBalance = _context.Transactions
+                .OrderByDescending(t => t.Date)
+                .Select(t => t.MBalance)
+                .FirstOrDefault();
+
+            return (transactions, monthlyBalance); 
+        }
+
+        private void UpdateUI((List<Transaction> transactions, decimal monthlyBalance) data)
+        {
+            var (transactions, monthlyBalance) = data;
+
+            // Get the current date
+            var now = DateTime.Now;
+            var startOfMonth = new DateTime(now.Year, now.Month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+            MonthlyBalance = monthlyBalance;
+
+            // Clear the existing collection
+            RecentTransactions.Clear();
+
+            // Add the fetched transactions to the ObservableCollection
+            foreach (var transaction in transactions)
+            {
+                RecentTransactions.Add(new TransactionViewModel
+                {
+                    Date = transaction.Date,
+                    Description = transaction.Description,
+                    Amount = transaction.Amount,
+                    MBalance = transaction.MBalance
+                });
+            }
+
+            var mBalances = transactions
+                    .GroupBy(t => t.Date.Date) // Group by date only, ignoring time
+                    .OrderBy(g => g.Key)
+                    .Select(g => g.OrderBy(t => t.Date).First().MBalance)
+                    .ToList();
+
+            if (transactions.Any())
+            {
+                InitialDateTime = new DateTime(transactions.Last().Date.Year, transactions.Last().Date.Month, transactions.Last().Date.Day);
+                XMin = (int)(startOfMonth - transactions.Last().Date).TotalDays;
+                XMax = (int)(endOfMonth - transactions.Last().Date).TotalDays;
+            }
+            else
+            {
+                InitialDateTime = new DateTime(now.Year, now.Month, now.Day);
+                XMin = (int)(startOfMonth - now).TotalDays + 5;
+                XMax = (int)(endOfMonth - now).TotalDays + 5;
+            }
+
+            SeriesCollection.Clear();
+            SeriesCollection.Add(new LineSeries
+            {
+                Title = "Amount",
+                Values = new ChartValues<decimal>(mBalances)
+            });
+
+            DataContext = this;
         }
 
         private void AddTransactionButton_Click(object sender, RoutedEventArgs e)
@@ -184,7 +201,7 @@ namespace FinanceManager
 
         private async void AddTransactionWindow_TransactionAdded(object sender, EventArgs e)
         {
-            await LoadData();
+            await LoadDataAsync();
         }
 
         protected void OnPropertyChanged(string propertyName)
