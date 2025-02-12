@@ -115,13 +115,8 @@ namespace FinanceManager
             }
         }
 
-        private (List<Transaction> transactions,
-                 decimal monthlyBalance) LoadData()
+        private (List<Transaction> transactions, decimal monthlyBalance) LoadData()
         {
-            
-            // Simulate a long-running task
-            System.Threading.Thread.Sleep(10000);
-
             // Fetch data from the database
             var transactions = _context.Transactions
                 .OrderByDescending(t => t.Date)
