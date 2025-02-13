@@ -140,18 +140,23 @@ namespace FinanceManager
 
         private (List<Transaction> transactions, decimal monthlyBalance) LoadData()
         {
-            // Fetch data from the database
+            // Get the current date
+            DateTime startOfMonth = new DateTime(InitialDateTime.Year, InitialDateTime.Month, 1);
+            DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+            // Fetch data from the database for the current month
             var transactions = _context.Transactions
+                .Where(t => t.Date >= startOfMonth && t.Date <= endOfMonth)
                 .OrderByDescending(t => t.Date)
                 .ToList();
 
             // Calculate total balance for the current month
-            var monthlyBalance = _context.Transactions
+            var monthlyBalance = transactions
                 .OrderByDescending(t => t.Date)
                 .Select(t => t.MBalance)
                 .FirstOrDefault();
 
-            return (transactions, monthlyBalance); 
+            return (transactions, monthlyBalance);
         }
 
         private void UpdateUI((List<Transaction> transactions, decimal monthlyBalance) data)
@@ -159,9 +164,8 @@ namespace FinanceManager
             var (transactions, monthlyBalance) = data;
 
             // Get the current date
-            var now = DateTime.Now;
-            var startOfMonth = new DateTime(now.Year, now.Month, 1);
-            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+            DateTime startOfMonth = new DateTime(InitialDateTime.Year, InitialDateTime.Month, 1);
+            DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
 
             MonthlyBalance = monthlyBalance;
 
@@ -200,9 +204,8 @@ namespace FinanceManager
             }
             else
             {
-                InitialDateTime = new DateTime(now.Year, now.Month, now.Day);
-                XMin = (int)(startOfMonth - now).TotalDays + 5;
-                XMax = (int)(endOfMonth - now).TotalDays + 5;
+                XMin = (int)(startOfMonth - InitialDateTime).TotalDays;
+                XMax = (int)(endOfMonth - InitialDateTime).TotalDays;
             }
 
             SeriesCollection.Clear();
@@ -221,6 +224,18 @@ namespace FinanceManager
             addTransactionWindow.Owner = this; // Set the owner to MainWindow (optional)
             addTransactionWindow.TransactionAdded += AddTransactionWindow_TransactionAdded;
             addTransactionWindow.ShowDialog(); // Show the window as a dialog
+        }
+
+        private async void PrevMonth_Click(object sender, RoutedEventArgs e)
+        {
+            InitialDateTime = InitialDateTime.AddMonths(-1);
+            await LoadDataAsync();
+        }
+
+        private async void NextMonth_Click(object sender, RoutedEventArgs e)
+        {
+            InitialDateTime = InitialDateTime.AddMonths(1);
+            await LoadDataAsync();
         }
 
         private async void AddTransactionWindow_TransactionAdded(object sender, EventArgs e)

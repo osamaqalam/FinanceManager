@@ -13,6 +13,9 @@
                                Text="{Binding MonthlyBalance, StringFormat=C}" />
                 </StackPanel>
             </Border>
+            
+            <Button Content="Prev Month" Click="PrevMonth_Click" Width="100"/>
+            <Button Content="Next Month" Click="NextMonth_Click" Width="100"/>
 
             <Button Content="Add Transaction" Click="AddTransactionButton_Click" Width="200"/>
 
