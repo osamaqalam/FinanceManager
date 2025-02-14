@@ -48,7 +48,7 @@ namespace FinanceManager
             set
             {
                 _xMin = value;
-                OnPropertyChanged("XMin");
+                OnPropertyChanged(nameof(XMin));
             }
         }
 
@@ -58,7 +58,7 @@ namespace FinanceManager
             set
             {
                 _xMax = value;
-                OnPropertyChanged("XMax");
+                OnPropertyChanged(nameof(XMax));
             }
         }
 
@@ -68,7 +68,7 @@ namespace FinanceManager
             set
             {
                 _yMin = value;
-                OnPropertyChanged("YMin");
+                OnPropertyChanged(nameof(YMin));
             }
         }
 
@@ -78,7 +78,7 @@ namespace FinanceManager
             set
             {
                 _yMax = value;
-                OnPropertyChanged("YMax");
+                OnPropertyChanged(nameof(YMax));
             }
         }
 
@@ -88,7 +88,7 @@ namespace FinanceManager
             set
             {
                 _period = value;
-                OnPropertyChanged("Period");
+                OnPropertyChanged(nameof(Period));
             }
         }
 
@@ -98,7 +98,7 @@ namespace FinanceManager
             set
             {
                 _initialDateTime = value;
-                OnPropertyChanged("InitialDateTime");
+                OnPropertyChanged(nameof(InitialDateTime));
             }
         }
         public MainWindow(FinanceContext context)
@@ -109,7 +109,7 @@ namespace FinanceManager
             SeriesCollection = new SeriesCollection();
             YAxisSeparator = new Separator
             {
-                Step = 100 // Set the interval for the y-axis
+                Step = 10 // Set the interval for the y-axis
             };
             var now = DateTime.UtcNow;
             InitialDateTime = new DateTime(now.Year, now.Month, now.Day);
@@ -194,6 +194,24 @@ namespace FinanceManager
             {
                 YMin = mBalances.Min() * Y_MARGIN;
                 YMax = mBalances.Max() * Y_MARGIN;
+
+                // Calculate the step size for approximately 5 separator lines
+                decimal range = Math.Max(Math.Abs(YMin), Math.Abs(YMax));
+                decimal step = range / 5;
+
+                // Round the step size to a "pretty" number
+                decimal magnitude = (decimal)Math.Pow(10, Math.Floor(Math.Log10((double)step)));
+                decimal normalizedStep = step / magnitude;
+                if (normalizedStep < 1.5M)
+                    normalizedStep = 1;
+                else if (normalizedStep < 3M)
+                    normalizedStep = 2;
+                else if (normalizedStep < 7M)
+                    normalizedStep = 5;
+                else
+                    normalizedStep = 10;
+
+                YAxisSeparator.Step = (double)(normalizedStep * magnitude);
             }
 
             if (transactions.Any())
