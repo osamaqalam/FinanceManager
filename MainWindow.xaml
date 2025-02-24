@@ -54,6 +54,7 @@
                     <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="150"/>
                     <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat=C}" Width="Auto"/>
                     <DataGridTextColumn Header="MBalance" Binding="{Binding MBalance, StringFormat=C}" Width="Auto"/>
+                    <DataGridTextColumn Header="Category" Binding="{Binding CategoryName, StringFormat=C}" Width="Auto"/>
                 </DataGrid.Columns>
             </DataGrid>
         </StackPanel>

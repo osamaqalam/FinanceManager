@@ -138,17 +138,27 @@ namespace FinanceManager
             }
         }
 
-        private (List<Transaction> transactions, decimal monthlyBalance) LoadData()
+        private (List<TransactionViewModel> transactions, decimal monthlyBalance) LoadData()
         {
             // Get the current date
             DateTime startOfMonth = new DateTime(InitialDateTime.Year, InitialDateTime.Month, 1);
             DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
 
             // Fetch data from the database for the current month
-            var transactions = _context.Transactions
-                .Where(t => t.Date >= startOfMonth && t.Date <= endOfMonth)
-                .OrderByDescending(t => t.Date)
-                .ToList();
+            var transactionsQuery = from t in _context.Transactions
+                                    join c in _context.Categories
+                                    on t.CategoryId equals c.CategoryId
+                                    where t.Date >= startOfMonth && t.Date <= endOfMonth
+                                    orderby t.Date descending
+                                    select new TransactionViewModel
+                                    {
+                                        Date = t.Date,
+                                        Description = t.Description,
+                                        Amount = t.Amount,
+                                        MBalance = t.MBalance,
+                                        CategoryName = c.Name
+                                    };
+            var transactions = transactionsQuery.ToList();
 
             // Calculate total balance for the current month
             var monthlyBalance = transactions
@@ -159,7 +169,7 @@ namespace FinanceManager
             return (transactions, monthlyBalance);
         }
 
-        private void UpdateUI((List<Transaction> transactions, decimal monthlyBalance) data)
+        private void UpdateUI((List<TransactionViewModel> transactions, decimal monthlyBalance) data)
         {
             var (transactions, monthlyBalance) = data;
 
@@ -175,13 +185,7 @@ namespace FinanceManager
             // Add the fetched transactions to the ObservableCollection
             foreach (var transaction in transactions)
             {
-                RecentTransactions.Add(new TransactionViewModel
-                {
-                    Date = transaction.Date,
-                    Description = transaction.Description,
-                    Amount = transaction.Amount,
-                    MBalance = transaction.MBalance
-                });
+                RecentTransactions.Add(transaction);
             }
 
             var mBalances = transactions
@@ -273,5 +277,6 @@ namespace FinanceManager
         public decimal Amount { get; set; }
         public decimal MBalance { get; set; }
         public System.DateTime Date { get; set; }
+        public string CategoryName { get; set; }
     }
 }

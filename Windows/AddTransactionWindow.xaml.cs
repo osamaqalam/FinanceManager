@@ -16,6 +16,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
+using System.IO;
+using Microsoft.ML;
+using Microsoft.ML.Data;
 
 namespace FinanceManager.Windows
 {
@@ -26,12 +29,14 @@ namespace FinanceManager.Windows
     {
         private readonly FinanceContext _context;
         private readonly ObservableCollection<TransactionViewModel> _recentTransactions;
+        private readonly PredictionEngine<FinanceManager.Windows.TransactionData, FinanceManager.Windows.TransactionPrediction> predictionEngine;
 
         public event EventHandler TransactionAdded;
 
         public AddTransactionWindow(FinanceContext context, ObservableCollection<TransactionViewModel> recentTransactions)
         {
             InitializeComponent();
+            predictionEngine = LoadPreditionEngine("model.zip");
             _context = context; // Use the injected context
             _recentTransactions = recentTransactions;
         }
@@ -65,10 +70,17 @@ namespace FinanceManager.Windows
 
             mBalance += amount;
 
+            var sampleTransaction = new TransactionData { Description = txtDescription.Text };
+            var prediction = predictionEngine.Predict(sampleTransaction);
+
+            var category = await _context.Categories
+                .FirstOrDefaultAsync(c => c.Name == prediction.PredictedCategory);
+            var categoryId = category?.CategoryId ?? 6; // Default to 6 if no category found
+
             // Example: Save a new transaction to the database
             var newTransaction = new Transaction
             {
-                CategoryId = 1,
+                CategoryId = categoryId,
                 Description = txtDescription.Text,
                 Amount = amount,
                 MBalance = mBalance,
@@ -99,6 +111,38 @@ namespace FinanceManager.Windows
             return regex.IsMatch(text);
         }
 
-        
+        private PredictionEngine<FinanceManager.Windows.TransactionData, FinanceManager.Windows.TransactionPrediction>
+            LoadPreditionEngine(string modelFileName)
+        {
+            // Create MLContext
+            var mlContext = new MLContext();
+
+            // Load the model from the .zip file.
+            DataViewSchema modelSchema;
+            ITransformer trainedModel;
+            using (var fileStream = new FileStream(modelFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                trainedModel = mlContext.Model.Load(fileStream, out modelSchema);
+            }
+
+            return mlContext.Model.CreatePredictionEngine<TransactionData, TransactionPrediction>(trainedModel);
+        }
+
     }
+
+    public class TransactionData
+    {
+        [LoadColumn(0)]
+        public string Description { get; set; }
+
+        [LoadColumn(1)]
+        public string Category { get; set; }
+    }
+
+    public class TransactionPrediction
+    {
+        [ColumnName("PredictedLabel")]
+        public string PredictedCategory { get; set; }
+    }
+
 }
