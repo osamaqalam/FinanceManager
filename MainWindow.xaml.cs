@@ -145,7 +145,7 @@ namespace FinanceManager
             DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
 
             // Fetch data from the database for the current month
-            var transactionsQuery = from t in _context.Transactions
+            var transactions = (from t in _context.Transactions
                                     join c in _context.Categories
                                     on t.CategoryId equals c.CategoryId
                                     where t.Date >= startOfMonth && t.Date <= endOfMonth
@@ -157,8 +157,7 @@ namespace FinanceManager
                                         Amount = t.Amount,
                                         MBalance = t.MBalance,
                                         CategoryName = c.Name
-                                    };
-            var transactions = transactionsQuery.ToList();
+                                    }).ToList();
 
             // Calculate total balance for the current month
             var monthlyBalance = transactions
@@ -188,11 +187,20 @@ namespace FinanceManager
                 RecentTransactions.Add(transaction);
             }
 
-            var mBalances = transactions
-                    .GroupBy(t => t.Date.Date) // Group by date only, ignoring time
-                    .OrderBy(g => g.Key)
-                    .Select(g => g.OrderBy(t => t.Date).First().MBalance)
-                    .ToList();
+            //var mBalances = transactions
+            //        .GroupBy(t => t.Date.Date) // Group by date only, ignoring time
+            //        .OrderBy(g => g.Key)
+            //        .Select(g => g.OrderBy(t => t.Date).First().MBalance)
+            //        .ToList();
+
+            //var mBalances = (
+            //                    from t in transactions
+            //                    group t by t.Date.Date into g
+            //                    orderby g.Key 
+            //                    select g.OrderBy(t => t.Date).Last().MBalance
+            //                ).ToList();
+
+            var mBalances = prepLineChart(transactions, monthlyBalance);
 
             if (mBalances.Any())
             {
@@ -238,6 +246,45 @@ namespace FinanceManager
             });
 
             DataContext = this;
+        }
+
+        private List<decimal> prepLineChart(List<TransactionViewModel> transactions, decimal monthlyBalance)
+        {
+            DateTime startOfMonth = new DateTime(InitialDateTime.Year, InitialDateTime.Month, 1);
+            DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+            // Group transactions by date and get the LAST balance for each day
+            var dailyBalances = transactions
+                .GroupBy(t => t.Date.Date)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.OrderBy(t => t.Date).Last().MBalance // Last transaction of the day
+                );
+
+            // Generate ALL DATES in the month (including days without transactions)
+            var allDates = new List<DateTime>();
+            for (var date = transactions.Last().Date.Date; date <= transactions.First().Date.Date; date = date.AddDays(1))
+            {
+                allDates.Add(date);
+            }
+
+            // Initialize with the starting monthly balance
+            decimal lastMBalance = dailyBalances.Last().Value;
+            var paddedBalances = new List<decimal>();
+
+            foreach (var date in allDates)
+            {
+                // Update balance if transactions exist for this date
+                if (dailyBalances.TryGetValue(date, out var mbalance))
+                {
+                    lastMBalance = mbalance;
+                }
+
+                // Add balance for this date (even if no transactions)
+                paddedBalances.Add(lastMBalance);
+            }
+
+            return paddedBalances;
         }
 
         private void AddTransactionButton_Click(object sender, RoutedEventArgs e)
