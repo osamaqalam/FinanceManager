@@ -172,10 +172,6 @@ namespace FinanceManager
         {
             var (transactions, monthlyBalance) = data;
 
-            // Get the current date
-            DateTime startOfMonth = new DateTime(InitialDateTime.Year, InitialDateTime.Month, 1);
-            DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
-
             MonthlyBalance = monthlyBalance;
 
             // Clear the existing collection
@@ -187,21 +183,9 @@ namespace FinanceManager
                 RecentTransactions.Add(transaction);
             }
 
-            //var mBalances = transactions
-            //        .GroupBy(t => t.Date.Date) // Group by date only, ignoring time
-            //        .OrderBy(g => g.Key)
-            //        .Select(g => g.OrderBy(t => t.Date).First().MBalance)
-            //        .ToList();
-
-            //var mBalances = (
-            //                    from t in transactions
-            //                    group t by t.Date.Date into g
-            //                    orderby g.Key 
-            //                    select g.OrderBy(t => t.Date).Last().MBalance
-            //                ).ToList();
-
             var mBalances = prepLineChart(transactions, monthlyBalance);
 
+            // Managing Y-Axis scale
             if (mBalances.Any())
             {
                 YMin = mBalances.Min() * Y_MARGIN;
@@ -226,6 +210,11 @@ namespace FinanceManager
                 YAxisSeparator.Step = (double)(normalizedStep * magnitude);
             }
 
+            // Get the current date
+            DateTime startOfMonth = new DateTime(InitialDateTime.Year, InitialDateTime.Month, 1);
+            DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+            // Managing X-Axis scale
             if (transactions.Any())
             {
                 InitialDateTime = new DateTime(transactions.Last().Date.Year, transactions.Last().Date.Month, transactions.Last().Date.Day);
@@ -249,16 +238,13 @@ namespace FinanceManager
         }
 
         private List<decimal> prepLineChart(List<TransactionViewModel> transactions, decimal monthlyBalance)
-        {
-            DateTime startOfMonth = new DateTime(InitialDateTime.Year, InitialDateTime.Month, 1);
-            DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
-
+        { 
             // Group transactions by date and get the LAST balance for each day
             var dailyBalances = transactions
                 .GroupBy(t => t.Date.Date)
                 .ToDictionary(
                     g => g.Key,
-                    g => g.OrderBy(t => t.Date).Last().MBalance // Last transaction of the day
+                    g => g.OrderBy(t => t.Date).Last().MBalance 
                 );
 
             // Generate ALL DATES in the month (including days without transactions)
@@ -280,7 +266,7 @@ namespace FinanceManager
                     lastMBalance = mbalance;
                 }
 
-                // Add balance for this date (even if no transactions)
+                // Add balance for this date
                 paddedBalances.Add(lastMBalance);
             }
 
