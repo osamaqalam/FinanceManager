@@ -1,5 +1,6 @@
 ﻿using FinanceManager.Data;
 using FinanceManager.Models;
+using FinanceManager.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -17,8 +18,6 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 using System.IO;
-using Microsoft.ML;
-using Microsoft.ML.Data;
 
 namespace FinanceManager.Windows
 {
@@ -29,14 +28,14 @@ namespace FinanceManager.Windows
     {
         private readonly FinanceContext _context;
         private readonly ObservableCollection<TransactionViewModel> _recentTransactions;
-        private readonly PredictionEngine<FinanceManager.Windows.TransactionData, FinanceManager.Windows.TransactionPrediction> predictionEngine;
+        private readonly TransactionCategorizer _categorizer;
 
         public event EventHandler TransactionAdded;
 
         public AddTransactionWindow(FinanceContext context, ObservableCollection<TransactionViewModel> recentTransactions)
         {
             InitializeComponent();
-            predictionEngine = LoadPreditionEngine("model.zip");
+            _categorizer = new TransactionCategorizer("model.zip");
             _context = context; // Use the injected context
             _recentTransactions = recentTransactions;
         }
@@ -71,13 +70,13 @@ namespace FinanceManager.Windows
             mBalance += amount;
 
             var sampleTransaction = new TransactionData { Description = txtDescription.Text };
-            var prediction = predictionEngine.Predict(sampleTransaction);
+            var prediction = _categorizer.Predict(txtDescription.Text);
 
             var category = await _context.Categories
                 .FirstOrDefaultAsync(c => c.Name == prediction.PredictedCategory);
             var categoryId = category?.CategoryId ?? 6; // Default to 6 if no category found
 
-            // Example: Save a new transaction to the database
+            // Save the new transaction to the database
             var newTransaction = new Transaction
             {
                 CategoryId = categoryId,
@@ -90,7 +89,7 @@ namespace FinanceManager.Windows
             _context.Transactions.Add(newTransaction);
             await _context.SaveChangesAsync();
 
-            // Add the new transaction to the ObservableCollection
+            // Update the table for recent transactions
             _recentTransactions.Insert(0, new TransactionViewModel
             {
                 Date = newTransaction.Date,
@@ -110,39 +109,6 @@ namespace FinanceManager.Windows
             Regex regex = new Regex(@"^\d*\.?\d*$"); // Regex that matches allowed text (digits and a single optional decimal point)
             return regex.IsMatch(text);
         }
-
-        private PredictionEngine<FinanceManager.Windows.TransactionData, FinanceManager.Windows.TransactionPrediction>
-            LoadPreditionEngine(string modelFileName)
-        {
-            // Create MLContext
-            var mlContext = new MLContext();
-
-            // Load the model from the .zip file.
-            DataViewSchema modelSchema;
-            ITransformer trainedModel;
-            using (var fileStream = new FileStream(modelFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                trainedModel = mlContext.Model.Load(fileStream, out modelSchema);
-            }
-
-            return mlContext.Model.CreatePredictionEngine<TransactionData, TransactionPrediction>(trainedModel);
-        }
-
-    }
-
-    public class TransactionData
-    {
-        [LoadColumn(0)]
-        public string Description { get; set; }
-
-        [LoadColumn(1)]
-        public string Category { get; set; }
-    }
-
-    public class TransactionPrediction
-    {
-        [ColumnName("PredictedLabel")]
-        public string PredictedCategory { get; set; }
     }
 
 }

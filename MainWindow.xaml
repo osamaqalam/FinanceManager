@@ -47,14 +47,15 @@
 
             <!-- Recent Transactions Section -->
             <TextBlock FontSize="16" FontWeight="Bold" Margin="0,10,0,5" Text="Recent Transactions" />
-            <DataGrid ItemsSource="{Binding RecentTransactions}" AutoGenerateColumns="False" 
-                      Height="350" Width="450" CanUserAddRows="False" AlternatingRowBackground="LightBlue" AlternationCount="2">
+            <DataGrid x:Name="MyDataGrid" ItemsSource="{Binding RecentTransactions}" AutoGenerateColumns="False" 
+                      Height="350" Width="450" CanUserAddRows="False" AlternatingRowBackground="LightBlue" AlternationCount="2"
+                      CellEditEnding="MyDataGrid_CellEditEnding">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat=d}" Width="Auto" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="150" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat=C}" Width="Auto" IsReadOnly="True"/>
                     <DataGridTextColumn Header="MBalance" Binding="{Binding MBalance, StringFormat=C}" Width="Auto" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Category" Binding="{Binding CategoryName, StringFormat=C}" Width="Auto"/>
+                    <DataGridTextColumn Header="Category" Binding="{Binding CategoryName, StringFormat=C, Mode=TwoWay}" Width="Auto"/>
                 </DataGrid.Columns>
             </DataGrid>
         </StackPanel>

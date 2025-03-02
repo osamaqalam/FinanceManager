@@ -3,8 +3,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using FinanceManager.Data;
 using FinanceManager.Models;
+using FinanceManager.Services;
 using FinanceManager.Windows;
 using LiveCharts;
 using LiveCharts.Helpers;
@@ -16,6 +18,7 @@ namespace FinanceManager
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         private readonly FinanceContext _context;
+        private readonly TransactionCategorizer _categorizer;
         private decimal _monthlyBalance;
         private int _xMin = -1;
         private int _xMax = 1;
@@ -26,7 +29,7 @@ namespace FinanceManager
         private DateTime _initialDateTime;
         public ObservableCollection<TransactionViewModel> RecentTransactions { get; set; }
         public SeriesCollection SeriesCollection { get; set; }
-        public Separator YAxisSeparator { get; set; }
+        public LiveCharts.Wpf.Separator YAxisSeparator { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
 
         public decimal MonthlyBalance
@@ -105,9 +108,10 @@ namespace FinanceManager
         {
             InitializeComponent();
             _context = context;
+            _categorizer = new TransactionCategorizer("model.zip");
             RecentTransactions = new ObservableCollection<TransactionViewModel>();
             SeriesCollection = new SeriesCollection();
-            YAxisSeparator = new Separator
+            YAxisSeparator = new LiveCharts.Wpf.Separator
             {
                 Step = 10 // Set the interval for the y-axis
             };
@@ -296,6 +300,36 @@ namespace FinanceManager
         private async void AddTransactionWindow_TransactionAdded(object sender, EventArgs e)
         {
             await LoadDataAsync();
+        }
+
+        private void MyDataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            if (e.EditingElement is TextBox textBox)
+            {
+                string newCategory = textBox.Text;
+
+                // Cast the row's data item to your model
+                if (e.Row.Item is TransactionViewModel rowData)
+                {
+                    // Now you can access other properties of the row
+                    string description = rowData.Description;
+
+                    // For example, trigger a function with these values
+                    OnRowCellValueChanged(description, newCategory);
+                }
+            }
+        }
+
+        private void OnRowCellValueChanged(string description, string newCategory)
+        {
+            TransactionData newTrainingData = new TransactionData
+            {
+                Description = description,
+                Category = newCategory
+            };
+
+            _categorizer.AppendTrainingData(newTrainingData);
+            _categorizer.RetrainModel();
         }
 
         protected void OnPropertyChanged(string propertyName)
